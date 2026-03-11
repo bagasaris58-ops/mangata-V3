@@ -82,10 +82,10 @@ export function generateShopeeCSV(products: ProductImage[]): string {
 
       const row: Row = {
         "Nama Produk": name,
-        "Deskripsi Produk": "",
+        "Deskripsi Produk": (pl as any)?.description || "",
         "Kategori": "",
-        "Harga": 0,
-        "Stok": 0,
+        "Harga": (pl as any)?.price || 0,
+        "Stok": (pl as any)?.stock || 0,
         "SKU Induk": sku || "",
         "Gambar1": imgs[0] || "",
         "Gambar2": imgs[1] || "",
