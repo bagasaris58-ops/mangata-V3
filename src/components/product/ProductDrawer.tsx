@@ -19,16 +19,19 @@ export const ProductDrawer = () => {
   const { currentProduct, setCurrentProduct, addToBatch } = useProducts();
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [productTitle, setProductTitle] = useState(currentProduct?.title || '');
+  const [price, setPrice] = useState('');
+  const [stock, setStock] = useState('');
+  const [description, setDescription] = useState('');
 
   if (!currentProduct) return null;
 
   const images = currentProduct.imagesAll || [];
-  const featuredImages = images.slice(0, 9); // First 9 as featured
-  const otherImages = images.slice(9); // Rest as other images
+  const featuredImages = images.slice(0, 9);
+  const otherImages = images.slice(9);
 
   const toggleImageSelection = (imageId: string) => {
-    setSelectedImages(prev => 
-      prev.includes(imageId) 
+    setSelectedImages(prev =>
+      prev.includes(imageId)
         ? prev.filter(id => id !== imageId)
         : [...prev, imageId]
     );
@@ -39,11 +42,13 @@ export const ProductDrawer = () => {
     const updatedProduct = {
       ...currentProduct,
       title: productTitle,
-      imagesPicked: selectedImageMetas
+      imagesPicked: selectedImageMetas.length > 0 ? selectedImageMetas : images.slice(0, 9),
+      price: parseFloat(price) || 0,
+      stock: parseInt(stock) || 0,
+      description,
     };
-    
     addToBatch(updatedProduct);
-    toast.success('Added to batch for later processing');
+    toast.success('Ditambahkan ke batch!');
     setCurrentProduct(null);
   };
 
@@ -52,7 +57,7 @@ export const ProductDrawer = () => {
       <SheetContent className="w-full sm:max-w-4xl overflow-y-auto">
         <SheetHeader className="space-y-4">
           <div className="flex items-center justify-between">
-            <SheetTitle className="text-2xl">Product Details</SheetTitle>
+            <SheetTitle className="text-2xl">Detail Produk</SheetTitle>
             <Button
               variant="outline"
               size="sm"
@@ -60,61 +65,95 @@ export const ProductDrawer = () => {
               className="gap-2"
             >
               <X className="h-4 w-4" />
-              Close
+              Tutup
             </Button>
           </div>
           <SheetDescription>
-            Select up to 9 images for this product. Featured images are automatically selected based on quality.
+            Pilih hingga 9 gambar, lalu isi info produk sebelum ditambahkan ke batch.
           </SheetDescription>
         </SheetHeader>
 
         <div className="space-y-6 mt-6">
-          {/* Product Info */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Product Title</Label>
+              <Label htmlFor="title">Nama Produk</Label>
               <Input
                 id="title"
                 value={productTitle}
                 onChange={(e) => setProductTitle(e.target.value)}
-                placeholder="Enter product title..."
+                placeholder="Masukkan nama produk..."
               />
             </div>
-            
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price">Harga (Rp)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="cth: 75000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stock">Stok</Label>
+                <Input
+                  id="stock"
+                  type="number"
+                  value={stock}
+                  onChange={(e) => setStock(e.target.value)}
+                  placeholder="cth: 100"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Deskripsi Produk</Label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Deskripsi singkat produk..."
+                rows={3}
+                className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
             <div className="flex items-center gap-2">
               <Badge variant="outline">{currentProduct.slug}</Badge>
               <Badge variant="secondary">
-                {selectedImages.length} of {Math.min(9, images.length)} selected
+                {selectedImages.length > 0 ? selectedImages.length : Math.min(9, images.length)} gambar dipilih
               </Badge>
             </div>
           </div>
 
-          {/* Featured Images */}
           {featuredImages.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-secondary-warm" />
-                <h3 className="text-lg font-semibold">Featured Images (Best Quality)</h3>
+                <Star className="h-5 w-5 text-yellow-500" />
+                <h3 className="text-lg font-semibold">Gambar Utama</h3>
+                <span className="text-xs text-muted-foreground">(kosong = ambil semua otomatis)</span>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                 {featuredImages.map((image) => (
                   <div key={image.id} className="relative group">
-                    <div className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-primary/50 transition-colors">
+                    <div className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
+                      selectedImages.includes(image.id) ? 'border-primary' : 'border-transparent hover:border-primary/50'
+                    }`}>
                       <img
-  src={image.downloadUrl || image.webViewLink}
-     
- alt={image.name}
- className="w-full h-full object-cover"
-/>
-
-
-                <div className="absolute top-2 left-2">
+                        src={image.downloadUrl || image.webViewLink}
+                        alt={image.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${image.id}/300/300`; }}
+                      />
+                    </div>
+                    <div className="absolute top-2 left-2">
                       <Checkbox
                         checked={selectedImages.includes(image.id)}
                         onCheckedChange={() => toggleImageSelection(image.id)}
                         className="bg-background/80 backdrop-blur-sm"
-<div className="absolute bottom-2 left-2 right-2">
-                    
+                      />
                     </div>
                   </div>
                 ))}
@@ -122,18 +161,20 @@ export const ProductDrawer = () => {
             </div>
           )}
 
-          {/* Other Images */}
           {otherImages.length > 0 && (
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold">All Other Images</h3>
+              <h3 className="text-lg font-semibold">Gambar Lainnya</h3>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                 {otherImages.map((image) => (
                   <div key={image.id} className="relative group">
-                    <div className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-primary/50 transition-colors">
+                    <div className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
+                      selectedImages.includes(image.id) ? 'border-primary' : 'border-transparent hover:border-primary/50'
+                    }`}>
                       <img
-                        src={image.downloadUrl || image.webViewLink.}
+                        src={image.downloadUrl || image.webViewLink}
                         alt={image.name}
                         className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${image.id}/300/300`; }}
                       />
                     </div>
                     <div className="absolute top-1 left-1">
@@ -149,21 +190,13 @@ export const ProductDrawer = () => {
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentProduct(null)}
-            >
-              Cancel
+            <Button variant="outline" onClick={() => setCurrentProduct(null)}>
+              Batal
             </Button>
-            <Button
-              onClick={handleSaveToLater}
-              disabled={selectedImages.length === 0}
-              className="gap-2 bg-gradient-primary"
-            >
+            <Button onClick={handleSaveToLater} className="gap-2 bg-gradient-primary">
               <Save className="h-4 w-4" />
-              Add to Batch
+              Tambah ke Batch
             </Button>
           </div>
         </div>

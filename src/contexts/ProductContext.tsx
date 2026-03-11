@@ -86,9 +86,9 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setIsScanning(true);
     try {
       const params = new URLSearchParams({
-        q: `name contains '${q}' and '${driveRootFolderId}' in parents and trashed=false`,
+        q: `name contains '${q}' and '${driveRootFolderId}' in ancestors and trashed=false and mimeType contains 'image/'`,
         fields: 'files(id,name,mimeType,parents),nextPageToken',
-        pageSize: '50',
+        pageSize: '100',
         key: driveApiKey,
       });
       if (pageToken) params.set('pageToken', pageToken);
@@ -96,7 +96,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const res = await fetch(url);
       if (!res.ok) throw new Error(await res.text());
       const j = await res.json();
-      const files = (j.files || []).filter((f: unknown) => (f.mimeType || '').startsWith('image/'));
+      const files = j.files || [];
       const prods = buildProductsFromFiles(files);
       setProducts(prev => pageToken ? [...prev, ...prods] : prods);
       return { nextPageToken: j.nextPageToken };
